@@ -1,0 +1,95 @@
+# EEG-BCI Pipeline Configuration for CP Motor Imagery Decoding
+# All parameters are tunable here without touching source code.
+
+# ── Data ──────────────────────────────────────────────────────────────────
+data:
+  dataset: "physionet"          # physionet | bciciv2a | bciciv2b | synthetic
+  data_dir: "data/raw"
+  processed_dir: "data/processed"
+  subjects: [1, 2, 3]          # Subject IDs to process
+  runs:                         # PhysioNet run IDs for L/R hand MI
+    - 4
+    - 8
+    - 12
+
+# ── Preprocessing ─────────────────────────────────────────────────────────
+preprocessing:
+  sfreq_resample: 160           # Resample target (Hz); null to skip
+  bandpass:
+    l_freq: 1.0                 # Low cutoff (Hz)
+    h_freq: 40.0                # High cutoff (Hz)
+    method: "iir"
+  notch_freq: 50.0              # Power line frequency (50 Hz EU / 60 Hz US)
+  reference: "average"          # EEG reference: average | mastoid | none
+  artifact_removal:
+    ica: true
+    n_components: 20
+    eog_channels: []            # e.g. ['EOG1'] — leave empty if none
+  epoch:
+    tmin: -1.0                  # Seconds before event
+    tmax: 4.0                   # Seconds after event
+    baseline: [-1.0, 0.0]       # Baseline correction window
+    reject_peak_to_peak: 150e-6 # Epoch rejection threshold (µV)
+
+# ── Events ────────────────────────────────────────────────────────────────
+events:
+  # PhysioNet event mapping
+  left_hand: "T1"
+  right_hand: "T2"
+  # BCI Competition IV 2a mapping (GDF annotations)
+  # left_hand: 769
+  # right_hand: 770
+
+# ── Feature Extraction ────────────────────────────────────────────────────
+features:
+  csp:
+    n_components: 6             # Number of CSP components
+    reg: "ledoit_wolf"          # Regularization: None | ledoit_wolf | shrinkage
+    log: true                   # Apply log-variance transform
+  erd_ers:
+    freq_bands:
+      mu: [8, 12]               # Mu rhythm
+      beta: [13, 30]            # Beta rhythm
+    tmin: 0.5                   # Start of MI window (s)
+    tmax: 3.5                   # End of MI window (s)
+  band_power:
+    bands:
+      delta: [1, 4]
+      theta: [4, 8]
+      mu: [8, 12]
+      beta_low: [13, 20]
+      beta_high: [20, 30]
+
+# ── Classification ────────────────────────────────────────────────────────
+classification:
+  classifier: "lda"             # lda | svm | rf | ensemble
+  cross_validation:
+    strategy: "kfold"           # kfold | loo | stratified
+    n_splits: 10
+    shuffle: true
+    random_state: 42
+  svm:
+    kernel: "rbf"
+    C: 1.0
+    gamma: "scale"
+  random_forest:
+    n_estimators: 200
+    max_depth: null
+    random_state: 42
+  lda:
+    solver: "svd"
+    shrinkage: null
+
+# ── Output ────────────────────────────────────────────────────────────────
+output:
+  results_dir: "outputs"
+  save_model: true
+  generate_report: true
+  plot_formats: ["png", "svg"]
+
+# ── Real-time ─────────────────────────────────────────────────────────────
+realtime:
+  buffer_size_seconds: 4.0
+  step_size_seconds: 0.25
+  lsl_stream_name: "EEG_BCI_CP"
+  feedback_enabled: true
