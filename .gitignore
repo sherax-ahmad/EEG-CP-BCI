@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Data (large files — use DVC or external storage)
+data/raw/**/*.edf
+data/raw/**/*.gdf
+data/raw/**/*.mat
+data/raw/**/*.fif
+data/processed/*.fif
+
+# Outputs
+outputs/
+*.pkl
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# MNE data
+MNE-data/
+~/mne_data/
